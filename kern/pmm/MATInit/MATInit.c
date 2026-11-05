@@ -22,7 +22,7 @@ void pmem_init(unsigned int mbi_addr)
 {
     unsigned int nps;
 
-    // TODO [Lab 1]: Define your local variables here.
+    unsigned int rows, i, j, end, max_end, start, len, pstart, perm;
 
     // Calls the lower layer initialization primitive.
     // The parameter mbi_addr should not be used in the further code.
@@ -35,7 +35,14 @@ void pmem_init(unsigned int mbi_addr)
      * Hint: Think of it as the highest address in the ranges of the memory map table,
      *       divided by the page size.
      */
-    // TODO [Lab 1]
+    rows = get_size();
+    max_end = 0;
+    for (i = 0; i < rows; i++) {
+        end = get_mms(i) + get_mml(i);
+        if (end > max_end)
+            max_end = end;
+    }
+    nps = max_end / PAGESIZE;
 
     set_nps(nps);  // Setting the value computed above to NUM_PAGES.
 
@@ -62,5 +69,23 @@ void pmem_init(unsigned int mbi_addr)
      *    the addresses are in a usable range. Currently, we do not utilize partial pages,
      *    so in that case, you should consider those pages as unavailable.
      */
-    // TODO [Lab 1]
+    for (i = 0; i < nps; i++) {
+        if (i < VM_USERLO_PI || i >= VM_USERHI_PI) {
+            at_set_perm(i, 1);
+            continue;
+        }
+        perm = 0;
+        pstart = i * PAGESIZE;
+        for (j = 0; j < rows; j++) {
+            if (!is_usable(j))
+                continue;
+            start = get_mms(j);
+            len = get_mml(j);
+            if (start <= pstart && pstart + PAGESIZE <= start + len) {
+                perm = 2;
+                break;
+            }
+        }
+        at_set_perm(i, perm);
+    }
 }

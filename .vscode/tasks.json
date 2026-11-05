@@ -1,0 +1,13 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "CertiKOS: build and run",
+      "type": "shell",
+      "command": "make LAB=1 && make qemu-nox LAB=1",
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": ["$gcc"],
+      "presentation": { "focus": true }
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+{"name":"Local: acpi","url":"/home/miraz/Documents/CSE 5th/CSE 5th OS Lab CSE 4502/CSE4502_OS_Lab/mcertikos/kern/dev/acpi.c","tests":[{"id":1793866151296,"input":"","output":""}],"interactive":false,"memoryLimit":1024,"timeLimit":3000,"srcPath":"/home/miraz/Documents/CSE 5th/CSE 5th OS Lab CSE 4502/CSE4502_OS_Lab/mcertikos/kern/dev/acpi.c","group":"local","local":true}
