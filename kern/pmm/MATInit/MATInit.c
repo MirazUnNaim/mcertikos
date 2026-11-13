@@ -18,34 +18,63 @@
  *    Review import.h in the current directory for the list of available
  *    getter and setter functions.
  */
+
+ static int isItTwo(unsigned int pageInd){
+    unsigned int row_bios=get_size();
+    for(int i=0;i<row_bios;i++){
+        unsigned int start=get_mms(i);
+        unsigned int end=start+get_mml(i);
+        if(start<=pageInd*PAGESIZE && (pageInd+1)*PAGESIZE<=end && is_usable(i)){
+           return 1;
+        }
+    }
+    return 0;
+ }
+
+ static unsigned int maximum(unsigned int a,unsigned int b){
+   if(a>b){
+     return a;
+   }
+   return b;
+ }
+
 void pmem_init(unsigned int mbi_addr)
 {
     unsigned int nps;
 
-    unsigned int rows, i, j, end, max_end, start, len, pstart, perm;
-
+    // TODO [Lab 1]: Define your local variables here.
+    
     // Calls the lower layer initialization primitive.
     // The parameter mbi_addr should not be used in the further code.
     devinit(mbi_addr);
     mem_spinlock_init();
-
+    unsigned int row_bios=get_size(); //must write get_size() and others after devinit
+    unsigned int totalMem=0;
+    for(unsigned int i=0;i<row_bios;i++){
+        totalMem=maximum(totalMem,get_mms(i)+get_mml(i)); //because of the gaps consider the highest last address
+        
+    }
+    nps=totalMem/PAGESIZE;
     /**
      * Calculate the total number of physical pages provided by the hardware and
      * store it into the local variable nps.
      * Hint: Think of it as the highest address in the ranges of the memory map table,
      *       divided by the page size.
      */
-    rows = get_size();
-    max_end = 0;
-    for (i = 0; i < rows; i++) {
-        end = get_mms(i) + get_mml(i);
-        if (end > max_end)
-            max_end = end;
-    }
-    nps = max_end / PAGESIZE;
+    // TODO [Lab 1]
 
     set_nps(nps);  // Setting the value computed above to NUM_PAGES.
-
+    for(unsigned int i=0;i<nps;i++){
+        if(i<VM_USERLO_PI || i>=VM_USERHI_PI){
+            at_set_perm(i,1);
+        }
+        else if(isItTwo(i)){
+            at_set_perm(i,2);
+        }
+        else{
+            at_set_perm(i,0);
+        }
+    }
     /**
      * Initialization of the physical allocation table (AT).
      *
@@ -69,23 +98,5 @@ void pmem_init(unsigned int mbi_addr)
      *    the addresses are in a usable range. Currently, we do not utilize partial pages,
      *    so in that case, you should consider those pages as unavailable.
      */
-    for (i = 0; i < nps; i++) {
-        if (i < VM_USERLO_PI || i >= VM_USERHI_PI) {
-            at_set_perm(i, 1);
-            continue;
-        }
-        perm = 0;
-        pstart = i * PAGESIZE;
-        for (j = 0; j < rows; j++) {
-            if (!is_usable(j))
-                continue;
-            start = get_mms(j);
-            len = get_mml(j);
-            if (start <= pstart && pstart + PAGESIZE <= start + len) {
-                perm = 2;
-                break;
-            }
-        }
-        at_set_perm(i, perm);
-    }
+    // TODO [Lab 1]
 }

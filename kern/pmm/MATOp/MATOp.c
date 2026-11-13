@@ -7,7 +7,7 @@
 #define VM_USERHI    0xF0000000
 #define VM_USERLO_PI (VM_USERLO / PAGESIZE)
 #define VM_USERHI_PI (VM_USERHI / PAGESIZE)
-
+static unsigned int currentPosition=VM_USERLO_PI;
 /**
  * Allocate a physical page.
  *
@@ -26,33 +26,24 @@
  * allocation table is protected by mem_lock() / mem_unlock(). Keep your code
  * between the two calls and do not return in between.
  */
-static unsigned int palloc_last = VM_USERLO_PI;  // memoization: where the last search stopped
-
 unsigned int palloc()
 {
     unsigned int palloc_free_index = 0;
 
     mem_lock();
-
-    {
-        unsigned int start, i;
-        if (palloc_last < VM_USERLO_PI || palloc_last >= VM_USERHI_PI)
-            palloc_last = VM_USERLO_PI;
-        start = palloc_last;
-        i = start;
-        do {
-            if (at_is_norm(i) && !at_is_allocated(i)) {
-                at_set_allocated(i, 1);
-                palloc_free_index = i;
-                palloc_last = i;
-                break;
-            }
-            i++;
-            if (i >= VM_USERHI_PI)
-                i = VM_USERLO_PI;
-        } while (i != start);
+    // TODO [Lab 1]
+    for(int i=currentPosition;;){
+         if(at_is_norm(i) && !at_is_allocated(i)){
+             palloc_free_index=i;
+             currentPosition=(i+1)%VM_USERHI_PI+(VM_USERLO_PI*(!((i+1)%VM_USERHI_PI)));
+             at_set_allocated(i,1);
+             break;
+         }
+         i=(i+1)%VM_USERHI_PI+(VM_USERLO_PI*(!((i+1)%VM_USERHI_PI)));  
+         if(i==currentPosition){
+            break;
+         }
     }
-
     mem_unlock();
 
     return palloc_free_index;
@@ -69,6 +60,6 @@ unsigned int palloc()
 void pfree(unsigned int pfree_index)
 {
     mem_lock();
-    at_set_allocated(pfree_index, 0);
+    at_set_allocated(pfree_index,0);
     mem_unlock();
 }
