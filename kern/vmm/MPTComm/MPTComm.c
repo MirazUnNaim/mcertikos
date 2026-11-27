@@ -16,11 +16,19 @@
  */
 void pdir_init(unsigned int mbi_addr)
 {
-    // TODO [Lab 3]: Define your local variables here.
+    unsigned int i, j;
 
     idptbl_init(mbi_addr);
 
-    // TODO [Lab 3]
+    for (i = 0; i < NUM_IDS; i++) {
+        for (j = 0; j < 1024; j++) {
+            if (j < VM_USERLO_PDE || j >= VM_USERHI_PDE) {
+                set_pdir_entry_identity(i, j);   // kernel part: identity map
+            } else {
+                rmv_pdir_entry(i, j);            // user part: empty
+            }
+        }
+    }
 }
 
 /**
@@ -32,8 +40,16 @@ void pdir_init(unsigned int mbi_addr)
  */
 unsigned int alloc_ptbl(unsigned int proc_index, unsigned int vaddr)
 {
-    // TODO [Lab 3]
-    return 0;
+    unsigned int page_index, i;
+    page_index = container_alloc(proc_index);
+    if (page_index == 0) {
+        return 0;
+    }
+    set_pdir_entry_by_va(proc_index, vaddr, page_index);
+    for (i = 0; i < 1024; i++) {
+        rmv_ptbl_entry(proc_index, vaddr >> 22, i);
+    }
+    return page_index;
 }
 
 // Reverse operation of alloc_ptbl.
@@ -41,5 +57,8 @@ unsigned int alloc_ptbl(unsigned int proc_index, unsigned int vaddr)
 // and frees the page for the page table entries (with container_free).
 void free_ptbl(unsigned int proc_index, unsigned int vaddr)
 {
-    // TODO [Lab 3]
+    unsigned int page_index;
+    page_index = get_pdir_entry_by_va(proc_index, vaddr) >> 12;
+    rmv_pdir_entry_by_va(proc_index, vaddr);
+    container_free(proc_index, page_index);
 }

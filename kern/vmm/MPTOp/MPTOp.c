@@ -16,27 +16,34 @@
  */
 unsigned int get_ptbl_entry_by_va(unsigned int proc_index, unsigned int vaddr)
 {
-    // TODO [Lab 3]
+    unsigned int pde = vaddr >> 22;
+    unsigned int pte = (vaddr >> 12) & 0x3FF;
+    if (get_pdir_entry(proc_index, pde) != 0) {
+        return get_ptbl_entry(proc_index, pde, pte);
+    }
     return 0;
 }
 
 // Returns the page directory entry corresponding to the given virtual address.
 unsigned int get_pdir_entry_by_va(unsigned int proc_index, unsigned int vaddr)
 {
-    // TODO [Lab 3]
-    return 0;
+    return get_pdir_entry(proc_index, vaddr >> 22);
 }
 
 // Removes the page table entry for the given virtual address.
 void rmv_ptbl_entry_by_va(unsigned int proc_index, unsigned int vaddr)
 {
-    // TODO [Lab 3]
+    unsigned int pde = vaddr >> 22;
+    unsigned int pte = (vaddr >> 12) & 0x3FF;
+    if (get_pdir_entry(proc_index, pde) != 0) {
+        rmv_ptbl_entry(proc_index, pde, pte);
+    }
 }
 
 // Removes the page directory entry for the given virtual address.
 void rmv_pdir_entry_by_va(unsigned int proc_index, unsigned int vaddr)
 {
-    // TODO [Lab 3]
+    rmv_pdir_entry(proc_index, vaddr >> 22);
 }
 
 // Maps the virtual address [vaddr] to the physical page # [page_index] with permission [perm].
@@ -44,14 +51,14 @@ void rmv_pdir_entry_by_va(unsigned int proc_index, unsigned int vaddr)
 void set_ptbl_entry_by_va(unsigned int proc_index, unsigned int vaddr,
                           unsigned int page_index, unsigned int perm)
 {
-    // TODO [Lab 3]
+    set_ptbl_entry(proc_index, vaddr >> 22, (vaddr >> 12) & 0x3FF, page_index, perm);
 }
 
 // Registers the mapping from [vaddr] to physical page # [page_index] in the page directory.
 void set_pdir_entry_by_va(unsigned int proc_index, unsigned int vaddr,
                           unsigned int page_index)
 {
-    // TODO [Lab 3]
+    set_pdir_entry(proc_index, vaddr >> 22, page_index);
 }
 
 // Initializes the identity page table.
@@ -59,9 +66,17 @@ void set_pdir_entry_by_va(unsigned int proc_index, unsigned int vaddr,
 // While the permission for the rest should be PTE_P and PTE_W.
 void idptbl_init(unsigned int mbi_addr)
 {
-    // TODO [Lab 3]: Define your local variables here.
+    unsigned int i, j;
 
     container_init(mbi_addr);
 
-    // TODO [Lab 3]
+    for (i = 0; i < 1024; i++) {
+        for (j = 0; j < 1024; j++) {
+            if (i < VM_USERLO_PDE || i >= VM_USERHI_PDE) {
+                set_ptbl_entry_identity(i, j, PTE_P | PTE_W | PTE_G);  // kernel part
+            } else {
+                set_ptbl_entry_identity(i, j, PTE_P | PTE_W);          // user part
+            }
+        }
+    }
 }

@@ -16,11 +16,13 @@
  */
 void pdir_init_kern(unsigned int mbi_addr)
 {
-    // TODO [Lab 3]: Define your local variables here.
+    unsigned int i;
 
     pdir_init(mbi_addr);
 
-    // TODO [Lab 3]
+    for (i = VM_USERLO_PDE; i < VM_USERHI_PDE; i++) {
+        set_pdir_entry_identity(0, i);   // process 0: identity map everywhere
+    }
 }
 
 /**
@@ -34,8 +36,17 @@ void pdir_init_kern(unsigned int mbi_addr)
 unsigned int map_page(unsigned int proc_index, unsigned int vaddr,
                       unsigned int page_index, unsigned int perm)
 {
-    // TODO [Lab 3]
-    return 0;
+    unsigned int ptbl_page;
+    if (get_pdir_entry_by_va(proc_index, vaddr) == 0) {
+        ptbl_page = alloc_ptbl(proc_index, vaddr);
+        if (ptbl_page == 0) {
+            return MagicNumber;
+        }
+    } else {
+        ptbl_page = get_pdir_entry_by_va(proc_index, vaddr) >> 12;
+    }
+    set_ptbl_entry_by_va(proc_index, vaddr, page_index, perm);
+    return ptbl_page;
 }
 
 /**
@@ -48,6 +59,9 @@ unsigned int map_page(unsigned int proc_index, unsigned int vaddr,
  */
 unsigned int unmap_page(unsigned int proc_index, unsigned int vaddr)
 {
-    // TODO [Lab 3]
-    return 0;
+    unsigned int entry = get_ptbl_entry_by_va(proc_index, vaddr);
+    if (entry != 0) {
+        rmv_ptbl_entry_by_va(proc_index, vaddr);
+    }
+    return entry;
 }
