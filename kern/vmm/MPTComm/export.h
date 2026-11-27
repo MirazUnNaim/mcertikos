@@ -8,5 +8,4 @@ unsigned int alloc_ptbl(unsigned int proc_index, unsigned int vaddr);
 void free_ptbl(unsigned int proc_index, unsigned int vaddr);
 
 #endif  /* _KERN_ */
-
 #endif  /* !_KERN_VMM_MPTCOMM_H_ */
